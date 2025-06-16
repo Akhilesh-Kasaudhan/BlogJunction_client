@@ -1,13 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/posts";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/`, formData, {
+      const response = await axios.post(`${API_URL}/posts/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -24,7 +24,7 @@ export const getPosts = createAsyncThunk(
   "posts/getPosts",
   async (page = 1, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}?page=${page}`);
+      const response = await axios.get(`${API_URL}/posts?page=${page}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -36,7 +36,7 @@ export const getPostById = createAsyncThunk(
   "posts/getPostById",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/${postId}`);
+      const response = await axios.get(`${API_URL}/posts/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -50,7 +50,7 @@ export const updatePost = createAsyncThunk(
   "posts/updatePost",
   async ({ postId, formData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/${postId}`, formData, {
+      const response = await axios.put(`${API_URL}/posts/${postId}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -67,7 +67,7 @@ export const deletePost = createAsyncThunk(
   "posts/deletePost",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`${API_URL}/${postId}`, {
+      const response = await axios.delete(`${API_URL}/posts/${postId}`, {
         withCredentials: true,
       });
       return response.data;
@@ -82,7 +82,7 @@ export const toggleLike = createAsyncThunk(
   async (postId, { rejectWithValue }) => {
     try {
       const { data } = await axios.put(
-        `${API_URL}/like/${postId}`,
+        `${API_URL}/posts/like/${postId}`,
         {},
         {
           withCredentials: true,
@@ -99,7 +99,7 @@ export const getMostLikedPosts = createAsyncThunk(
   "posts/getMostLikedPosts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/most-liked`);
+      const response = await axios.get(`${API_URL}/posts/most-liked`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -111,7 +111,7 @@ export const getFeaturedPosts = createAsyncThunk(
   "posts/getFeaturedPosts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/featured`);
+      const response = await axios.get(`${API_URL}/posts/featured`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -125,7 +125,7 @@ export const getPostsByCategory = createAsyncThunk(
     try {
       const endpoint =
         category === "All"
-          ? `${API_URL}?page=${page}`
+          ? `${API_URL}/posts?page=${page}`
           : `${API_URL}/category/${category}?page=${page}`;
       const response = await axios.get(endpoint);
       return response.data;
@@ -151,7 +151,7 @@ export const getSummarizeContent = createAsyncThunk(
   "posts/getSummarizeContent",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/summarize/${postId}`, {
+      const response = await axios.get(`${API_URL}/posts/summarize/${postId}`, {
         withCredentials: true,
       });
       return response.data;
@@ -166,7 +166,7 @@ export const generateContent = createAsyncThunk(
   async ({ title, desc }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/generate-content`,
+        `${API_URL}/posts/generate-content`,
         {
           title,
           desc,

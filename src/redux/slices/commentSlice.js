@@ -5,14 +5,14 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/comments";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const writeComments = createAsyncThunk(
   "comments/writeComment",
   async ({ content, id }, { rejectedWithValue }) => {
     try {
       const res = await axios.post(
-        `${API_URL}/`,
+        `${API_URL}/comments/`,
         { content, postId: id },
         { withCredentials: true }
       );
@@ -27,7 +27,7 @@ export const getCommentsForPost = createAsyncThunk(
   "comments/getCommentsForPost",
   async (postId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/${postId}`, {
+      const res = await axios.get(`${API_URL}/comments/${postId}`, {
         withCredentials: true,
       });
 
@@ -42,7 +42,9 @@ export const deleteComment = createAsyncThunk(
   "comments/deleteComment",
   async (commentId, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_URL}/${commentId}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/comments/${commentId}`, {
+        withCredentials: true,
+      });
       return commentId;
     } catch (err) {
       return rejectWithValue(err.response.data.message);
