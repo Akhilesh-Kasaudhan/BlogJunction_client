@@ -25,6 +25,7 @@ export const getPosts = createAsyncThunk(
   async (page = 1, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/posts?page=${page}`);
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -88,6 +89,7 @@ export const toggleLike = createAsyncThunk(
           withCredentials: true,
         }
       );
+      console.log(data);
       return data.post;
     } catch (error) {
       return rejectWithValue(error.response.data);

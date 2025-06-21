@@ -6,10 +6,12 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (formData, { rejectWithValue }) => {
+    console.log(formData);
     try {
       const response = await axios.post(`${API_URL}/auth/register`, formData, {
         withCredentials: true,
       });
+      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -24,6 +26,7 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post(`${API_URL}/auth/login`, formData, {
         withCredentials: true,
       });
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -40,6 +43,7 @@ export const logoutUser = createAsyncThunk(
         {},
         { withCredentials: true }
       );
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -54,6 +58,7 @@ export const fetchUserProfile = createAsyncThunk(
       const response = await axios.get(`${API_URL}/auth/profile`, {
         withCredentials: true,
       });
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -68,6 +73,7 @@ export const updateUserProfile = createAsyncThunk(
       const response = await axios.put(`${API_URL}/auth/profile`, formData, {
         withCredentials: true,
       });
+      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);

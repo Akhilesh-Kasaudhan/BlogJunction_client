@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EditorState, convertToRaw, ContentState } from "draft-js";
-import "draft-js/dist/Draft.css";
-import draftToHtml from "draftjs-to-html";
-import htmlToDraft from "html-to-draftjs";
-import { Editor } from "react-draft-wysiwyg";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
 import { useDispatch, useSelector } from "react-redux";
 import { createPost, generateContent } from "../redux/slices/postThunk";
 import { toast } from "react-toastify";
@@ -28,9 +28,7 @@ const CreateBlog = () => {
     loading: catLoading,
     error: catError,
   } = useSelector((state) => state.categories);
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty()
-  );
+
   const { generateLoading } = useSelector((state) => state.posts);
 
   const [loading, setLoading] = useState(false);
@@ -39,6 +37,7 @@ const CreateBlog = () => {
     register,
     handleSubmit,
     getValues,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -48,18 +47,30 @@ const CreateBlog = () => {
     dispatch(getCategories());
   }, [dispatch]);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Image,
+      Link,
+      Placeholder.configure({
+        placeholder: "Write your blog content here...",
+      }),
+    ],
+    content: "",
+  });
+
   const onSubmit = async (data) => {
-    const contentState = editorState.getCurrentContent();
-    if (!contentState.hasText()) {
+    if (!editor) {
       toast.error("Blog content cannot be empty");
       return;
     }
-    const content = JSON.stringify(convertToRaw(contentState));
+
+    const htmlContent = editor.getHTML();
 
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("desc", data.desc);
-    formData.append("content", content);
+    formData.append("content", htmlContent);
     formData.append("category", data.category);
     if (data.image && data.image[0]) {
       formData.append("image", data.image[0]);
@@ -70,7 +81,8 @@ const CreateBlog = () => {
       const res = await dispatch(createPost(formData)).unwrap();
       toast.success("Blog posted successfully!");
       console.log(res);
-      setEditorState(EditorState.createEmpty());
+      reset();
+      editor.commands.clearContent();
     } catch (err) {
       toast.error(err?.message || "Failed to post blog");
     } finally {
@@ -85,16 +97,11 @@ const CreateBlog = () => {
       return;
     }
     try {
-      const content = await dispatch(generateContent({ title, desc })).unwrap();
-
-      const blocksFromHtml = htmlToDraft(await content);
-      const { contentBlocks, entityMap } = blocksFromHtml;
-      const contentState = ContentState.createFromBlockArray(
-        contentBlocks,
-        entityMap
-      );
-      const newEditorState = EditorState.createWithContent(contentState);
-      setEditorState(newEditorState);
+      const generated = await dispatch(
+        generateContent({ title, desc })
+      ).unwrap();
+      console.log(generated);
+      editor.commands.setContent(generated);
       toast.success("AI-generated content added!");
     } catch (error) {
       toast.error(error?.message || "Failed to generate content");
@@ -172,30 +179,71 @@ const CreateBlog = () => {
 
         <div>
           <label className="label font-semibold">Blog Content</label>
+          {editor && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  editor.isActive("bold") ? "btn-primary" : "btn-outline"
+                }`}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+              >
+                Bold
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  editor.isActive("italic") ? "btn-primary" : "btn-outline"
+                }`}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+              >
+                Italic
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  editor.isActive("bulletList") ? "btn-primary" : "btn-outline"
+                }`}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+              >
+                • Bullet List
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  editor.isActive("orderedList") ? "btn-primary" : "btn-outline"
+                }`}
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              >
+                1. Ordered List
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  editor.isActive("heading", { level: 2 })
+                    ? "btn-primary"
+                    : "btn-outline"
+                }`}
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 2 }).run()
+                }
+              >
+                H2
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline"
+                onClick={() =>
+                  editor.chain().focus().unsetAllMarks().clearNodes().run()
+                }
+              >
+                Clear Format
+              </button>
+            </div>
+          )}
+
           <div className="border border-gray-300 p-2 rounded-md min-h-[200px] bg-white">
-            <Editor
-              editorState={editorState}
-              onEditorStateChange={setEditorState}
-              toolbar={{
-                options: [
-                  "inline",
-                  "blockType",
-                  "fontSize",
-                  "list",
-                  "textAlign",
-                  "link",
-                  "emoji",
-                  "image",
-                ],
-                inline: { inDropdown: true },
-                list: { inDropdown: true },
-                textAlign: { inDropdown: true },
-                link: { inDropdown: true },
-              }}
-              wrapperClassName="wrapper-class"
-              editorClassName="editor-class"
-              toolbarClassName="toolbar-class"
-            />
+            <EditorContent editor={editor} />
           </div>
         </div>
 

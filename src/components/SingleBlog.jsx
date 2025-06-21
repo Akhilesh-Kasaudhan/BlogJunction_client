@@ -11,7 +11,6 @@ import {
   writeComments,
   deleteComment,
 } from "../redux/slices/commentSlice";
-import draftToHtml from "draftjs-to-html";
 
 const SingleBlog = () => {
   const { postId } = useParams();
@@ -19,17 +18,14 @@ const SingleBlog = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { posts, loading, error } = useSelector((state) => state.posts);
+  const { posts, loading, error, summary, summaryError, summaryLoading } =
+    useSelector((state) => state.posts);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const blog = posts.find((post) => post._id === postId);
 
   const { comments, loading: commentsLoading } = useSelector(
     (state) => state.comments
-  );
-
-  const { summary, summaryLoading, summaryError } = useSelector(
-    (state) => state.posts
   );
 
   const [newComment, setNewComment] = useState("");
@@ -109,14 +105,6 @@ const SingleBlog = () => {
     );
   }
 
-  let htmlContent = "";
-  try {
-    const contentState = JSON.parse(blog.content);
-    htmlContent = draftToHtml(contentState);
-  } catch (e) {
-    htmlContent = "<p>Error rendering blog content</p>";
-  }
-
   return (
     <div className="max-w-4xl mx-auto mt-24 p-4 space-y-6 bg-base-100 shadow-lg rounded-xl">
       {showAuthPrompt && (
@@ -128,7 +116,10 @@ const SingleBlog = () => {
               login or create an account to continue.
             </p>
             <div className="flex gap-3 justify-end">
-              <button onClick={handleAuthPromptClose} className="btn btn-ghost">
+              <button
+                onClick={() => setShowAuthPrompt(false)}
+                className="btn btn-ghost"
+              >
                 Cancel
               </button>
               <button onClick={handleGoToLogin} className="btn btn-primary">
@@ -163,20 +154,22 @@ const SingleBlog = () => {
       </div>
 
       <div
-        className="bg-base-200 p-4 rounded-lg"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
+        className="bg-base-200 p-4 rounded-lg prose prose-lg max-w-none"
+        dangerouslySetInnerHTML={{ __html: blog.content }}
       />
 
       <div className="flex gap-4 mt-4">
-        <button
-          onClick={handleLike}
-          className={`btn btn-outline ${
-            hasUserLiked ? "btn-primary bg-primary text-white" : "btn-primary"
-          }`}
-          title={!isAuthenticated ? "Login required to like posts" : ""}
-        >
-          👍 {hasUserLiked ? "Liked" : "Like"} ({blog.likes.length})
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleLike}
+            className={`btn btn-outline ${
+              hasUserLiked ? "btn-primary bg-primary text-white" : "btn-primary"
+            }`}
+            title={!isAuthenticated ? "Login required to like posts" : ""}
+          >
+            👍 {hasUserLiked ? "Liked" : "Like"} ({blog.likes.length})
+          </button>
+        )}
 
         {isAuthenticated ? (
           isSummaryRequested ? (
