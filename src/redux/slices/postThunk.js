@@ -109,6 +109,22 @@ export const getMostLikedPosts = createAsyncThunk(
   }
 );
 
+export const toggleFeaturedStatus = createAsyncThunk(
+  "posys/toggleFeaturedStatus",
+  async (postId, { rejectedWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/posts/${postId}/toggle-featured`,
+        {},
+        { withCredentials: true }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectedWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 export const getFeaturedPosts = createAsyncThunk(
   "posts/getFeaturedPosts",
   async (_, { rejectWithValue }) => {

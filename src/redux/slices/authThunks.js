@@ -94,3 +94,14 @@ export const deleteUserProfile = createAsyncThunk(
     }
   }
 );
+
+export const getAllUsers = createAsyncThunk(
+  "auth/getAllUsers",
+  async (_, { rejectWithValue }) => {
+    const response = await axios.get(`${API_URL}/auth/`, {
+      withCredentials: true,
+    });
+    console.log(response);
+    return response.data;
+  }
+);

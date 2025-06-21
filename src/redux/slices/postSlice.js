@@ -12,6 +12,7 @@ import {
   getPostsByUser,
   getSummarizeContent,
   generateContent,
+  toggleFeaturedStatus,
 } from "./postThunk";
 
 const initialState = {
@@ -152,6 +153,24 @@ const postSlice = createSlice({
         state.loading = false;
       })
       .addCase(getFeaturedPosts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(toggleFeatured.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(toggleFeatured.fulfilled, (state, action) => {
+        const updatedPost = action.payload.post;
+        const index = state.posts.findIndex(
+          (post) => post._id === updatedPost._id
+        );
+        if (index !== -1) {
+          state.posts[index] = updatedPost;
+        }
+        state.loading = false;
+      })
+      .addCase(toggleFeatured.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
