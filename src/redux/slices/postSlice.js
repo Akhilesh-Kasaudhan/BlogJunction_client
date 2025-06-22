@@ -52,6 +52,9 @@ const postSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(getPosts.pending, (state, action) => {
+        state.loading = true;
+      })
       .addCase(getPosts.fulfilled, (state, action) => {
         state.posts = action.payload.posts;
         state.totalPages = action.payload.totalPages;
@@ -156,11 +159,11 @@ const postSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(toggleFeatured.pending, (state) => {
+      .addCase(toggleFeaturedStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(toggleFeatured.fulfilled, (state, action) => {
+      .addCase(toggleFeaturedStatus.fulfilled, (state, action) => {
         const updatedPost = action.payload.post;
         const index = state.posts.findIndex(
           (post) => post._id === updatedPost._id
@@ -170,7 +173,7 @@ const postSlice = createSlice({
         }
         state.loading = false;
       })
-      .addCase(toggleFeatured.rejected, (state, action) => {
+      .addCase(toggleFeaturedStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

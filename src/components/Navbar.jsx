@@ -17,6 +17,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+  console.log("isAuthenticated:", isAuthenticated, user);
 
   const {
     register,
@@ -26,14 +27,10 @@ const Navbar = () => {
   } = useForm();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(fetchUserProfile()).then((res) => {
-        if (res.payload?.user) {
-          reset(res.payload.user); // populate form with current user data
-        }
-      });
+    if (user) {
+      reset(user);
     }
-  }, [dispatch, isAuthenticated, reset]);
+  }, [user, reset]);
 
   const handleLogout = async () => {
     dispatch(logoutUser());
@@ -98,6 +95,11 @@ const Navbar = () => {
         <NavLink to="/create" className={navLinkClasses}>
           Create Blog
         </NavLink>
+        {isAuthenticated && user?.role == "admin" && (
+          <NavLink to="/dashboard" className={navLinkClasses}>
+            Dashboard
+          </NavLink>
+        )}
       </div>
 
       {!menuOpen && (
@@ -140,6 +142,15 @@ const Navbar = () => {
           >
             Create Blog
           </NavLink>
+          {isAuthenticated && user?.role == "admin" && (
+            <NavLink
+              to="/dashboard"
+              className="btn btn-ghost w-full"
+              onClick={() => setMenuOpen(false)}
+            >
+              Dashboard
+            </NavLink>
+          )}
           {isAuthenticated ? (
             <>
               <button
