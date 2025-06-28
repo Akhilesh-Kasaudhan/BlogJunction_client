@@ -1,34 +1,56 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers, deleteUserProfile } from "../../redux/slices/authThunks";
-
+import { toast } from "react-toastify";
 import {
   getPosts,
   deletePost,
   toggleFeaturedStatus,
+  getFeaturedPosts,
 } from "../../redux/slices/postThunk";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { allUsers } = useSelector((state) => state.auth);
+  const { allUsers, user: currentUser } = useSelector((state) => state.auth);
+  const [localUsers, setLocalUsers] = useState([]);
   const { posts } = useSelector((state) => state.posts);
+  const [togglingPostId, setTogglingPostId] = useState(null);
 
   useEffect(() => {
-    console.log("dashboard mounted:::::from dashboard");
     dispatch(getAllUsers());
     dispatch(getPosts(1));
   }, [dispatch]);
 
-  const handleDeleteUser = (id) => {
-    dispatch(deleteUserProfile(id));
+  useEffect(() => {
+    setLocalUsers(allUsers);
+  }, [allUsers]);
+
+  const handleDeleteUser = async (id) => {
+    const res = await dispatch(deleteUserProfile(id));
+    if (res.meta.requestStatus === "fulfilled") {
+      setLocalUsers((prev) => prev.filter((u) => u._id !== id));
+      toast.success("User deleted successfully");
+    } else {
+      toast.error(res.payload?.message || "Deletion failed");
+    }
   };
 
   const handleDeletePost = (id) => {
     dispatch(deletePost(id));
+    toast.success("Post deleted successfully");
   };
 
-  const handleToggleFeatured = (id) => {
-    dispatch(toggleFeaturedStatus(id));
+  const handleToggleFeatured = async (id) => {
+    setTogglingPostId(id);
+    const res = await dispatch(toggleFeaturedStatus(id));
+    if (res.meta.requestStatus === "fulfilled") {
+      toast.success("Featured status toggled");
+      await dispatch(getPosts(1));
+      await dispatch(getFeaturedPosts());
+    } else {
+      toast.error("Toggle failed");
+    }
+    setTogglingPostId(null);
   };
 
   return (
@@ -50,18 +72,20 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {allUsers.map((user) => (
+                {localUsers.map((user) => (
                   <tr key={user._id} className="border-t hover:bg-base-300">
                     <td className="py-2 px-4">{user.username}</td>
                     <td className="py-2 px-4">{user.email}</td>
                     <td className="py-2 px-4">{user.role}</td>
                     <td className="py-2 px-4">
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="btn btn-sm btn-error text-white"
-                      >
-                        Delete
-                      </button>
+                      {user._id !== currentUser?._id && (
+                        <button
+                          onClick={() => handleDeleteUser(user._id)}
+                          className="btn btn-sm btn-error text-white"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -88,19 +112,28 @@ const Dashboard = () => {
               <tbody>
                 {posts.map((post) => (
                   <tr key={post._id} className="border-t hover:bg-base-300">
-                    <td className="py-2 px-4">{post.title}</td>
+                    <td className="py-2 px-4" title={post.title}>
+                      {" "}
+                      {post.title.split(" ").slice(0, 5).join(" ")}
+                      {post.title.split(" ").length > 5 ? "..." : ""}
+                    </td>
                     <td className="py-2 px-4">
-                      {post.author?.name || "Unknown"}
+                      {post.author?.username || "Unknown"}
                     </td>
                     <td className="py-2 px-4">
                       {post.isFeatured ? "Yes" : "No"}
                     </td>
-                    <td className="py-2 px-4 space-x-2">
+                    <td className="py-2 px-4 space-x-2 flex items-center justify-center gap-4">
                       <button
                         onClick={() => handleToggleFeatured(post._id)}
-                        className="btn btn-sm btn-info text-white"
+                        className="btn btn-sm btn-info text-white flex items-center gap-2"
+                        disabled={togglingPostId === post._id}
                       >
-                        Toggle Featured
+                        {togglingPostId === post._id ? (
+                          <span className="loading loading-spinner loading-sm"></span>
+                        ) : (
+                          "Toggle Featured"
+                        )}
                       </button>
                       <button
                         onClick={() => handleDeletePost(post._id)}

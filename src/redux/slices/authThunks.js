@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -26,9 +27,10 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post(`${API_URL}/auth/login`, formData, {
         withCredentials: true,
       });
-
+      toast.success("Lgged in successfully");
       return response.data;
     } catch (error) {
+      toast.error("Invalid credentials");
       return rejectWithValue(error.response.data);
     }
   }
@@ -73,7 +75,7 @@ export const updateUserProfile = createAsyncThunk(
       const response = await axios.put(`${API_URL}/auth/profile`, formData, {
         withCredentials: true,
       });
-      console.log(response.data);
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -83,9 +85,9 @@ export const updateUserProfile = createAsyncThunk(
 
 export const deleteUserProfile = createAsyncThunk(
   "auth/deleteUserProfile",
-  async (_, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`${API_URL}/auth/profile`, {
+      const response = await axios.delete(`${API_URL}/auth/profile/${id}`, {
         withCredentials: true,
       });
       return response.data;

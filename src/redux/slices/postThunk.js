@@ -1,17 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import axiosInstance from "../../api/axios";
 
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/posts/`, formData, {
+      const response = await axiosInstance.post(`/posts/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        withCredentials: true,
       });
       return response.data;
     } catch (error) {
@@ -24,7 +22,7 @@ export const getPosts = createAsyncThunk(
   "posts/getPosts",
   async (page = 1, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/posts?page=${page}`);
+      const response = await axiosInstance.get(`/posts?page=${page}`);
 
       return response.data;
     } catch (error) {
@@ -37,7 +35,7 @@ export const getPostById = createAsyncThunk(
   "posts/getPostById",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/posts/${postId}`);
+      const response = await axiosInstance.get(`/posts/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -51,11 +49,10 @@ export const updatePost = createAsyncThunk(
   "posts/updatePost",
   async ({ postId, formData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/posts/${postId}`, formData, {
+      const response = await axiosInstance.put(`/posts/${postId}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        withCredentials: true,
       });
       return response.data;
     } catch (error) {
@@ -68,9 +65,7 @@ export const deletePost = createAsyncThunk(
   "posts/deletePost",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`${API_URL}/posts/${postId}`, {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.delete(`/posts/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -82,13 +77,7 @@ export const toggleLike = createAsyncThunk(
   "posts/toggleLike",
   async (postId, { rejectWithValue }) => {
     try {
-      const { data } = await axios.put(
-        `${API_URL}/posts/like/${postId}`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      const { data } = await axiosInstance.put(`/posts/like/${postId}`, {});
       console.log(data);
       return data.post;
     } catch (error) {
@@ -101,7 +90,7 @@ export const getMostLikedPosts = createAsyncThunk(
   "posts/getMostLikedPosts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/posts/most-liked`);
+      const response = await axiosInstance.get(`/posts/most-liked`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -113,10 +102,9 @@ export const toggleFeaturedStatus = createAsyncThunk(
   "posys/toggleFeaturedStatus",
   async (postId, { rejectedWithValue }) => {
     try {
-      const response = await axios.patch(
-        `${API_URL}/posts/${postId}/toggle-featured`,
-        {},
-        { withCredentials: true }
+      const response = await axiosInstance.patch(
+        `/posts/${postId}/toggle-featured`,
+        {}
       );
       return response.data;
     } catch (error) {
@@ -129,7 +117,7 @@ export const getFeaturedPosts = createAsyncThunk(
   "posts/getFeaturedPosts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/posts/featured`);
+      const response = await axiosInstance.get(`/posts/featured`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -155,12 +143,17 @@ export const getPostsByCategory = createAsyncThunk(
 
 export const getPostsByUser = createAsyncThunk(
   "posts/getPostsByUser",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/user/${userId}`);
+      const response = await axiosInstance.get(
+        `/posts/user/${userId}?page=${page}&limit=${limit}`
+      );
+
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to fetch user posts" }
+      );
     }
   }
 );
@@ -169,9 +162,7 @@ export const getSummarizeContent = createAsyncThunk(
   "posts/getSummarizeContent",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/posts/summarize/${postId}`, {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.get(`/posts/summarize/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -183,14 +174,10 @@ export const generateContent = createAsyncThunk(
   "posts/generateContent",
   async ({ title, desc }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/posts/generate-content`,
-        {
-          title,
-          desc,
-        },
-        { withCredentials: true }
-      );
+      const response = await axiosInstance.post(`/posts/generate-content`, {
+        title,
+        desc,
+      });
 
       return response.data.content;
     } catch (error) {

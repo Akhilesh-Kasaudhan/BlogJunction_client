@@ -101,9 +101,11 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteUserProfile.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
+      .addCase(deleteUserProfile.fulfilled, (state, action) => {
+        const deletedUserId = action.payload.deletedUserId; // get from backend response
+        state.allUsers = state.allUsers.filter(
+          (user) => user._id !== deletedUserId
+        );
         state.loading = false;
       })
       .addCase(deleteUserProfile.rejected, (state, action) => {

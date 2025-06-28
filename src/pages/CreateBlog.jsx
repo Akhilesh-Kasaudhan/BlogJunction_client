@@ -100,7 +100,7 @@ const CreateBlog = () => {
       const generated = await dispatch(
         generateContent({ title, desc })
       ).unwrap();
-      console.log(generated);
+
       editor.commands.setContent(generated);
       toast.success("AI-generated content added!");
     } catch (error) {

@@ -7,7 +7,7 @@ const BlogCard = ({ blog }) => {
 
   return (
     <Link to={`/blog/${postId}`} className="no-underline">
-      <div className="card bg-base-100 max-w-80 shadow-sm hover:shadow-lg shadow-gray-500 transition-shadow duration-300 hover:cursor-pointer line-clamp-1">
+      <div className="card bg-base-100 max-w-80 shadow-sm hover:shadow-lg shadow-gray-500 transition-shadow duration-300 hover:cursor-pointer line-clamp-1 h-96">
         <figure>
           <img
             src={

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -6,9 +6,11 @@ import {
   fetchUserProfile,
   updateUserProfile,
 } from "../redux/slices/authThunks";
+import { getPostsByUser } from "../redux/slices/postThunk";
 import { CircleUser } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { tr } from "zod/v4/locales";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -16,8 +18,17 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
-  console.log("isAuthenticated:", isAuthenticated, user);
+  const {
+    isAuthenticated,
+    user,
+    loading: authLoading,
+  } = useSelector((state) => state.auth);
+  const {
+    userPosts,
+    currentPage,
+    totalPages,
+    loading: postsLoading,
+  } = useSelector((state) => state.posts);
 
   const {
     register,
@@ -26,11 +37,44 @@ const Navbar = () => {
     formState: { errors },
   } = useForm();
 
+  const observer = useRef();
+
   useEffect(() => {
     if (user) {
-      reset(user);
+      reset({ password: "" });
     }
   }, [user, reset]);
+
+  useEffect(() => {
+    if (showProfileModal) {
+      dispatch(getPostsByUser({ userId: user.id, page: 1 }));
+    }
+  }, [dispatch, user?._id, showProfileModal]);
+
+  const lastPostElementRef = useCallback(
+    (node) => {
+      if (postsLoading) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (
+          entries[0].isIntersecting &&
+          currentPage < totalPages &&
+          !postsLoading
+        ) {
+          dispatch(
+            getPostsByUser({
+              userId: user._id,
+              page: currentPage + 1,
+            })
+          );
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [postsLoading, currentPage, totalPages, user?._id, dispatch]
+  );
 
   const handleLogout = async () => {
     dispatch(logoutUser());
@@ -39,10 +83,9 @@ const Navbar = () => {
   };
 
   const handleProfileUpdate = (data) => {
-    dispatch(updateUserProfile(data));
-
+    dispatch(updateUserProfile({ password: data.password }));
+    toast.success("Password Updated Successfully");
     setShowProfileModal(false);
-    toast.success("Profile Updated Successfully");
   };
 
   const navLinkClasses = ({ isActive }) =>
@@ -183,9 +226,11 @@ const Navbar = () => {
           )}
         </div>
       )}
+
+      {/* Profile modal */}
       {isAuthenticated && showProfileModal && (
-        <div className="fixed inset-0 bg-base-200/95  bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-base-100 p-6 rounded-lg shadow-lg w-full max-w-md relative">
+        <div className="fixed inset-0 bg-base-200/95  bg-opacity-40 z-50 flex items-center justify-center overflow-y-auto">
+          <div className="bg-base-100 p-6 rounded-lg shadow-lg w-full max-w-4xl relative">
             <button
               className="btn btn-sm btn-circle absolute right-2 top-2"
               onClick={() => setShowProfileModal(false)}
@@ -193,43 +238,105 @@ const Navbar = () => {
               ✕
             </button>
             <h2 className="text-xl font-bold mb-4">User Profile</h2>
+            <div className="mb-6 grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="label">Username</label>
+                <input
+                  type="text"
+                  className="input  input-bordered w-full"
+                  value={user?.username}
+                  disabled
+                />
+              </div>
+              <div>
+                <label className="label">Email</label>
+                <input
+                  type="text"
+                  className="input input-boredered w-full"
+                  value={user?.email}
+                  disabled
+                />
+              </div>
+            </div>
+
             <form
               onSubmit={handleSubmit(handleProfileUpdate)}
               className="space-y-4"
             >
               <div>
-                <label className="label">Username</label>
+                <label className="label">New Password</label>
                 <input
                   className="input input-bordered w-full"
-                  {...register("username", {
-                    required: "Username is required",
+                  type="password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
                   })}
                 />
-                {errors.username && (
+                {errors.password && (
                   <p className="text-error text-sm">
-                    {errors.username.message}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
-              <div>
-                <label className="label">Email</label>
-                <input
-                  className="input input-bordered w-full"
-                  type="email"
-                  {...register("email", { required: "Email is required" })}
-                />
-                {errors.email && (
-                  <p className="text-error text-sm">{errors.email.message}</p>
-                )}
-              </div>
+
               <button
                 type="submit"
                 className="btn btn-primary w-full"
-                disabled={loading}
+                disabled={authLoading}
               >
-                {loading ? "Updating..." : "Update Profile"}
+                {authLoading ? "Updating..." : "Change Password"}
               </button>
             </form>
+
+            {postsLoading && !userPosts.length > 0 && (
+              <p className="text-center py-2">Loading your posts...</p>
+            )}
+
+            {/* Posts table by user */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Your Blog Posts</h3>
+              {userPosts?.length > 0 ? (
+                <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                  <table className="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Created At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userPosts.map((post, index) => {
+                        const isLast = index === userPosts.length - 1;
+                        return (
+                          <tr
+                            key={post._id}
+                            ref={isLast ? lastPostElementRef : null}
+                          >
+                            <td>{index + 1}</td>
+                            <td className="text-sm font-medium">
+                              {post.title}
+                            </td>
+                            <td>
+                              {new Date(post.createdAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {postsLoading && (
+                    <p className="text-center py-2">Loading more...</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No blog posts yet.</p>
+              )}
+            </div>
           </div>
         </div>
       )}

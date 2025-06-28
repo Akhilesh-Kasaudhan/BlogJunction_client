@@ -39,7 +39,6 @@ const Login = () => {
   const onSubmit = (data) => {
     if (tab === "login") {
       dispatch(loginUser(data));
-      toast.success("Lgged in successfully");
     } else {
       dispatch(registerUser(data));
       toast.success("User registered successfully");

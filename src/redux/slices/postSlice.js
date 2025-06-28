@@ -18,6 +18,8 @@ import {
 const initialState = {
   posts: [],
   mostLikedPosts: [],
+  featuredPosts: [],
+  userPosts: [],
   summary: "",
   summaryLoading: false,
   summaryError: null,
@@ -152,7 +154,7 @@ const postSlice = createSlice({
         state.error = null;
       })
       .addCase(getFeaturedPosts.fulfilled, (state, action) => {
-        state.posts = action.payload.posts;
+        state.featuredPosts = action.payload.posts;
         state.loading = false;
       })
       .addCase(getFeaturedPosts.rejected, (state, action) => {
@@ -196,10 +198,10 @@ const postSlice = createSlice({
         state.error = null;
       })
       .addCase(getPostsByUser.fulfilled, (state, action) => {
-        state.posts = action.payload.posts;
+        state.loading = false;
+        state.userPosts = action.payload.posts;
         state.totalPages = action.payload.totalPages;
         state.currentPage = action.payload.currentPage;
-        state.loading = false;
       })
       .addCase(getPostsByUser.rejected, (state, action) => {
         state.loading = false;

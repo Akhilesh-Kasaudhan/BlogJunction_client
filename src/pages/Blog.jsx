@@ -54,18 +54,22 @@ const Blog = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4 line-clamp-4">
-        {loading ? (
-          <p className="text-center col-span-full">Loading...</p>
-        ) : error ? (
-          <p className="text-error col-span-full">{error}</p>
-        ) : filteredBlogs.length > 0 ? (
-          filteredBlogs.map((post) => <BlogCard key={post._id} blog={post} />)
-        ) : (
-          <p className="text-center text-gray-500 col-span-full">
-            No blogs found.
-          </p>
-        )}
+      <div className="flex justify-center w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4 max-w-7xl w-full">
+          {loading ? (
+            <div className="col-span-full flex justify-center items-center h-96">
+              <span className="loading loading-bars loading-lg text-primary"></span>
+            </div>
+          ) : error ? (
+            <p className="text-error col-span-full text-center">{error}</p>
+          ) : filteredBlogs.length > 0 ? (
+            filteredBlogs.map((post) => <BlogCard key={post._id} blog={post} />)
+          ) : (
+            <p className="text-center text-gray-500 col-span-full">
+              No blogs found.
+            </p>
+          )}
+        </div>
       </div>
 
       {totalPages > 1 && (
