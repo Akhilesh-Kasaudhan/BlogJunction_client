@@ -20,6 +20,7 @@
     "@tiptap/react": "^2.22.0",
     "@tiptap/starter-kit": "^2.22.0",
     "axios": "^1.10.0",
+    "framer-motion": "^12.19.2",
     "lucide-react": "^0.513.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

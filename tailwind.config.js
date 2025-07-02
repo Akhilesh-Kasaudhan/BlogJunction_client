@@ -6,5 +6,5 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [typography, require("daisyui")],
+  plugins: [typography],
 };

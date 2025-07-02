@@ -17,8 +17,8 @@ const Newsletter = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setStatus("Subscribed successfully!");
       setEmail("");
-    } catch (err) {
-      setStatus("Something went wrong. Try again later.");
+    } catch (error) {
+      setStatus("Something went wrong. Try again later.", error);
     }
   };
 

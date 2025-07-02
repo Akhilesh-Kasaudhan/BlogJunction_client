@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  logoutUser,
-  fetchUserProfile,
-  updateUserProfile,
-} from "../redux/slices/authThunks";
+import { logoutUser, updateUserProfile } from "../redux/slices/authThunks";
 import { getPostsByUser } from "../redux/slices/postThunk";
-import { CircleUser } from "lucide-react";
+import { CircleUser, LogOut } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { tr } from "zod/v4/locales";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,7 +44,7 @@ const Navbar = () => {
     if (showProfileModal) {
       dispatch(getPostsByUser({ userId: user.id, page: 1 }));
     }
-  }, [dispatch, user?._id, showProfileModal]);
+  }, [dispatch, user?.id, showProfileModal]);
 
   const lastPostElementRef = useCallback(
     (node) => {
@@ -86,6 +81,7 @@ const Navbar = () => {
     dispatch(updateUserProfile({ password: data.password }));
     toast.success("Password Updated Successfully");
     setShowProfileModal(false);
+    reset({ password: "" });
   };
 
   const navLinkClasses = ({ isActive }) =>
@@ -96,7 +92,7 @@ const Navbar = () => {
       <div className="navbar-start">
         <Link to="/" className="btn btn-ghost normal-case text-xl">
           <img src="/fvicon.png" alt="logo" className="w-10 rounded-full" />
-          <span className="ml-2 hidden sm:inline">BlogJunction</span>
+          <span className="ml-2 hidden sm:inline">Blog Junction</span>
         </Link>
       </div>
 
@@ -146,7 +142,7 @@ const Navbar = () => {
       </div>
 
       {!menuOpen && (
-        <div className="navbar-end gap-2">
+        <div className="navbar-end gap-2 items-center">
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
               {isAuthenticated && (
@@ -157,8 +153,12 @@ const Navbar = () => {
                   <CircleUser size={20} />
                 </button>
               )}
-              <button className="btn btn-error btn-md" onClick={handleLogout}>
-                Logout
+              <button
+                className="btn btn-error btn-md btn-outline"
+                onClick={handleLogout}
+              >
+                <LogOut size={18} />
+                <span className="ml-1 hidden sm:inline">Logout</span>
               </button>
             </div>
           ) : (
@@ -170,7 +170,7 @@ const Navbar = () => {
       )}
 
       {menuOpen && (
-        <div className="absolute top-16 left-0 w-full bg-base-100 shadow-md flex flex-col lg:hidden z-50">
+        <div className="absolute top-16 left-0 w-full bg-base-100 shadow-md flex flex-col lg:hidden z-50 transition-all duration-300 ease-in-out">
           <NavLink
             to="/blog"
             className="btn btn-ghost w-full"
@@ -229,7 +229,7 @@ const Navbar = () => {
 
       {/* Profile modal */}
       {isAuthenticated && showProfileModal && (
-        <div className="fixed inset-0 bg-base-200/95  bg-opacity-40 z-50 flex items-center justify-center overflow-y-auto">
+        <div className="fixed inset-0 bg-base-200/95 backdrop-blur-sm   z-50 flex items-center justify-center overflow-y-auto">
           <div className="bg-base-100 p-6 rounded-lg shadow-lg w-full max-w-4xl relative">
             <button
               className="btn btn-sm btn-circle absolute right-2 top-2"
@@ -252,7 +252,7 @@ const Navbar = () => {
                 <label className="label">Email</label>
                 <input
                   type="text"
-                  className="input input-boredered w-full"
+                  className="input input-bordered w-full"
                   value={user?.email}
                   disabled
                 />

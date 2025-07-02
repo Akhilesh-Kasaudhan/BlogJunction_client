@@ -1,68 +1,68 @@
-import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect, lazy, Suspense } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import "./index.css";
+
 import Home from "./pages/Home";
 import Blog from "./pages/Blog";
-import CreateBlog from "./pages/CreateBlog";
 import Navbar from "./components/Navbar";
 import Login from "./components/login";
 import SingleBlog from "./components/SingleBlog";
 import Footer from "./components/Footer";
-import { useDispatch, useSelector } from "react-redux";
-import "./index.css";
-import { fetchUserProfile } from "./redux/slices/authThunks";
-import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Dashboard from "./pages/Admin/Dashboard";
+import { fetchUserProfile } from "./redux/slices/authThunks";
+
+const CreateBlog = lazy(() => import("./pages/CreateBlog"));
+const Dashboard = lazy(() => import("./pages/Admin/Dashboard"));
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pathname]);
+  return null;
+};
 
 const App = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, hasFetchedProfile } = useSelector(
-    (state) => state.auth
-  );
+  const { hasFetchedProfile } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (!hasFetchedProfile) {
       dispatch(fetchUserProfile());
     }
-  }, [dispatch, hasFetchedProfile]);
+  }, [hasFetchedProfile, dispatch]);
 
   return (
-    <div className=" bg-base-200 h-full">
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        pauseOnHover
-        theme="colored"
-      />
+    <div className=" bg-base-200 h-full ">
+      <ScrollToTop />
       <Navbar />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/blog/:postId" element={<SingleBlog />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute>
-              <CreateBlog />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute role="admin">
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="*"
-          element={<div className="text-center mt-20">Page Not Found</div>}
-        />
-      </Routes>
+      <Suspense fallback={<div className="text-center mt-20">Loading...</div>}>
+        <div className="max-w-full bg-base-300 shadow-md min-h-screen mt-16 pb-4">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:postId" element={<SingleBlog />} />
+            <Route
+              path="/create"
+              element={
+                <ProtectedRoute>
+                  <CreateBlog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute role="admin">
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Suspense>
       <Footer />
     </div>
   );

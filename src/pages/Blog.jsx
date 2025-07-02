@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import BlogCard from "../components/BlogCard";
 import SearchBar from "../components/SearchBar";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,26 +12,39 @@ const Blog = () => {
   );
   const { categories } = useSelector((state) => state.categories);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [category, setCategory] = useState("All");
 
   useEffect(() => {
-    dispatch(getCategories());
-  }, [dispatch]);
+    if (!categories.length) {
+      dispatch(getCategories());
+    }
+  }, [categories.length, dispatch]);
 
   useEffect(() => {
     dispatch(getPosts(currentPage));
   }, [dispatch, currentPage]);
 
-  const filteredBlogs = posts.filter((post) => {
-    const matchCategory = category === "All" || post.category === category;
-    const matchSearch =
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredBlogs = useMemo(() => {
+    return posts.filter((post) => {
+      const matchCategory = category === "All" || post.category === category;
+      const matchSearch =
+        post.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      return matchCategory && matchSearch;
+    });
+  }, [posts, category, debouncedSearchTerm]);
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page !== currentPage && page >= 1 && page <= totalPages) {
       dispatch(getPosts(page));
     }
   };

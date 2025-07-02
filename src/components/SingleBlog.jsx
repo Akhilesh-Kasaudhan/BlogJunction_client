@@ -154,7 +154,7 @@ const SingleBlog = () => {
       </div>
 
       <div
-        className="bg-base-200 p-4 rounded-lg prose prose-lg max-w-none"
+        className=" prose prose-lg max-w-none"
         dangerouslySetInnerHTML={{ __html: blog.content }}
       />
 
