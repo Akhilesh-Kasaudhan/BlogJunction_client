@@ -99,7 +99,7 @@ export const deleteUserProfile = createAsyncThunk(
 
 export const getAllUsers = createAsyncThunk(
   "auth/getAllUsers",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectedWithValue }) => {
     const response = await axios.get(`${API_URL}/auth/`, {
       withCredentials: true,
     });
