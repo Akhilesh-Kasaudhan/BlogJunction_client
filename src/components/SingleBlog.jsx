@@ -168,7 +168,7 @@ const SingleBlog = () => {
             }`}
             title={!isAuthenticated ? "Login required to like posts" : ""}
           >
-            👍 {hasUserLiked ? "Liked" : "Like"} ({blog.likes.length})
+            👍 {hasUserLiked ? "Liked" : "Like"} ({blog.likes?.length})
           </button>
         )}
 
@@ -193,7 +193,7 @@ const SingleBlog = () => {
         )}
       </div>
 
-      <div className="divider">Comments ({comments.length})</div>
+      <div className="divider">Comments ({comments?.length})</div>
 
       {!isAuthenticated && (
         <div className="alert alert-warning">
