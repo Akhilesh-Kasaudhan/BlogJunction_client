@@ -25,7 +25,7 @@ const SingleBlog = () => {
   const blog = posts.find((post) => post._id === postId);
 
   const { comments, loading: commentsLoading } = useSelector(
-    (state) => state.comments
+    (state) => state.comments,
   );
 
   const [newComment, setNewComment] = useState("");
@@ -130,11 +130,12 @@ const SingleBlog = () => {
         </div>
       )}
       {blog.image?.secure_url && (
-        <div className="w-full h-64 overflow-hidden rounded-lg">
+        <div className="w-full max-h-[420px] overflow-hidden rounded-lg  flex items-center justify-center bg-blue-50/45">
           <img
             src={blog.image.secure_url}
             alt="Cover"
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-[420px] object-contain"
+            loading="lazy"
           />
         </div>
       )}
