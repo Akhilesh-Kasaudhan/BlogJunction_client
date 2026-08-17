@@ -209,7 +209,7 @@ const SingleBlog = () => {
       {commentsLoading ? (
         <p>Loading comments...</p>
       ) : (
-        comments.map((c) => (
+        comments?.map((c) => (
           <div
             key={c._id}
             className="bg-base-200 p-3 rounded-md flex justify-between"
