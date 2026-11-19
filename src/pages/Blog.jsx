@@ -8,9 +8,8 @@ import { getCategories } from "../redux/slices/categorySlice";
 const Blog = () => {
   const dispatch = useDispatch();
   const { posts, loading, error, currentPage, totalPages } = useSelector(
-    (state) => state.posts
-  );
-  const { categories } = useSelector((state) => state.categories);
+    (state) => state.posts.posts ?? []  );
+  const { categories } = useSelector((state) => state.categories.categories ?? []);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [category, setCategory] = useState("All");

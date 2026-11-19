@@ -36,18 +36,21 @@ const FeaturedBlogs = () => {
     dispatch(getFeaturedPosts());
   }, [dispatch]);
 
-  const filterBlogs = (blogs) =>
-    blogs
-      ?.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          post.content.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .slice(0, 6);
+ const filterBlogs = (blogs) => {
+  const safeBlogs = Array.isArray(blogs) ? blogs : [];
 
-  const filteredLatest = filterBlogs(posts);
-  const filteredMostLiked = filterBlogs(mostLikedPosts);
-  const filteredFeatured = filterBlogs(featuredPosts);
+  return safeBlogs
+    .filter(
+      (post) =>
+        post?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post?.content?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(0, 6);
+};
+
+const filteredLatest = filterBlogs(posts);
+const filteredMostLiked = filterBlogs(mostLikedPosts);
+const filteredFeatured = filterBlogs(featuredPosts);
 
   if (loading) {
     return (

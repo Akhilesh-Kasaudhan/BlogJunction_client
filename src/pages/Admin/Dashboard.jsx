@@ -11,9 +11,13 @@ import {
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { allUsers, user: currentUser } = useSelector((state) => state.auth);
+  const { allUsers = [], user: currentUser } = useSelector(
+  (state) => state.auth
+);
   const [localUsers, setLocalUsers] = useState([]);
-  const { posts } = useSelector((state) => state.posts);
+  const { posts = [] } = useSelector(
+  (state) => state.posts
+);
   const [togglingPostId, setTogglingPostId] = useState(null);
 
   useEffect(() => {
