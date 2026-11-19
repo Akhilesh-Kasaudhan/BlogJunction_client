@@ -13,7 +13,11 @@ export const createPost = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+       return rejectWithValue(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create post"
+      );
     }
   }
 );
@@ -56,7 +60,11 @@ export const updatePost = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+       return rejectWithValue(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update post"
+      );
     }
   }
 );

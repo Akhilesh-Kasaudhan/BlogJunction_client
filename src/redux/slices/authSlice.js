@@ -1,4 +1,6 @@
+
 import { createSlice } from "@reduxjs/toolkit";
+
 import {
   registerUser,
   loginUser,
@@ -11,118 +13,151 @@ import {
 
 const initialState = {
   user: null,
+  token: null,
   allUsers: [],
   isAuthenticated: false,
+  hasFetchedProfile: false,
   loading: false,
   error: null,
-  hasFetchedProfile: false,
+};
+
+const clearAuthState = (state) => {
+  state.user = null;
+  state.token = null;
+  state.isAuthenticated = false;
+  state.loading = false;
+  state.error = null;
+  state.hasFetchedProfile = true;
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
+
   reducers: {
     logout: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
-      state.loading = false;
+      clearAuthState(state);
+     
+    },
+
+    clearAuthError: (state) => {
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
+
+      // REGISTER
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
+      .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || "Registration failed";
       })
+
+      // LOGIN
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-        state.loading = false;
-      })
+     .addCase(loginUser.fulfilled, (state, action) => {
+  state.user = action.payload.user;
+  state.token = action.payload.token;
+  state.isAuthenticated = !!action.payload.user;
+  state.loading = false;
+  state.hasFetchedProfile = true;
+  state.error = null;
+})
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.error = action.payload || "Login failed";
       })
+
+      // FETCH PROFILE
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        const user = action.payload?.user;
+
+        state.user = user || null;
+        state.isAuthenticated = !!user;
+        state.hasFetchedProfile = true;
+        state.loading = false;
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        clearAuthState(state);
+        state.hasFetchedProfile = true;
+        state.error = action.payload || "Not authenticated";
+      })
+
+      // LOGOUT
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.loading = false;
+        clearAuthState(state);
       })
-      .addCase(logoutUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(fetchUserProfile.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-        state.loading = false;
+      .addCase(logoutUser.rejected, (state) => {
+        // Clear local authentication even if the server
+        // logout request fails.
+        clearAuthState(state);
         state.hasFetchedProfile = true;
       })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.loading = false;
-        state.error = action.payload || "Failed to fetch profile";
-        state.hasFetchedProfile = true;
-      })
+
+      // UPDATE PROFILE
       .addCase(updateUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.user = { ...state.user, ...action.payload.user };
+        state.user = {
+          ...state.user,
+          ...action.payload.user,
+        };
         state.loading = false;
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
+
+      // DELETE USER
       .addCase(deleteUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(deleteUserProfile.fulfilled, (state, action) => {
-        const deletedUserId = action.payload.deletedUserId; // get from backend response
+        const deletedUserId = action.payload.deletedUserId;
+
         state.allUsers = state.allUsers.filter(
           (user) => user._id !== deletedUserId
         );
+
         state.loading = false;
       })
       .addCase(deleteUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
+
+      // GET ALL USERS
       .addCase(getAllUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
-        if (
-          JSON.stringify(state.allUsers) !==
-          JSON.stringify(action.payload.users)
-        ) {
-          state.allUsers = action.payload.users;
-        }
+        state.allUsers = action.payload.users || [];
         state.loading = false;
       })
       .addCase(getAllUsers.rejected, (state, action) => {
@@ -131,5 +166,7 @@ const authSlice = createSlice({
       });
   },
 });
-export const { logout } = authSlice.actions;
+
+export const { logout, clearAuthError } = authSlice.actions;
+
 export default authSlice.reducer;

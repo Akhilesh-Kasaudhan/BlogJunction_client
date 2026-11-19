@@ -7,9 +7,18 @@ import { getCategories } from "../redux/slices/categorySlice";
 
 const Blog = () => {
   const dispatch = useDispatch();
-  const { posts, loading, error, currentPage, totalPages } = useSelector(
-    (state) => state.posts.posts ?? []  );
-  const { categories } = useSelector((state) => state.categories.categories ?? []);
+  const {
+  posts = [],
+  loading,
+  error,
+  currentPage,
+  totalPages,
+} = useSelector((state) => state.posts);
+
+const categories = useSelector(
+    (state) => state.categories.categories ?? []
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [category, setCategory] = useState("All");
@@ -18,11 +27,11 @@ const Blog = () => {
     if (!categories.length) {
       dispatch(getCategories());
     }
-  }, [categories.length, dispatch]);
+  }, [dispatch, categories.length]);
 
-  useEffect(() => {
-    dispatch(getPosts(currentPage));
-  }, [dispatch, currentPage]);
+useEffect(() => {
+  dispatch(getPosts(1));
+}, [dispatch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,21 +41,34 @@ const Blog = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const filteredBlogs = useMemo(() => {
-    return posts.filter((post) => {
-      const matchCategory = category === "All" || post.category === category;
+const filteredBlogs = useMemo(() => {
+    const safePosts = Array.isArray(posts) ? posts : [];
+
+    return safePosts.filter((post) => {
+      const matchCategory =
+        category === "All" || post.category === category;
+
+      const title = (post.title || "").toLowerCase();
+      const content = (post.content || "").toLowerCase();
+      const search = debouncedSearchTerm.toLowerCase();
+
       const matchSearch =
-        post.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        title.includes(search) || content.includes(search);
+
       return matchCategory && matchSearch;
     });
   }, [posts, category, debouncedSearchTerm]);
 
-  const handlePageChange = (page) => {
-    if (page !== currentPage && page >= 1 && page <= totalPages) {
+   const handlePageChange = (page) => {
+    if (
+      page !== currentPage &&
+      page >= 1 &&
+      page <= totalPages
+    ) {
       dispatch(getPosts(page));
     }
   };
+
 
   return (
     <div className="max-w-full px-4 sm:px-8 bg-base-300 shadow-md min-h-screen mt-16 pb-2">

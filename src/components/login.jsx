@@ -37,22 +37,33 @@ const Login = () => {
     (state) => state.auth
   );
 
-  const onSubmit = (data) => {
+
+const onSubmit = async (data) => {
+  try {
     if (tab === "login") {
-      dispatch(loginUser(data));
+      await dispatch(loginUser(data)).unwrap();
+
+      toast.success("Logged in successfully");
+      reset();
+
+      navigate("/", { replace: true });
     } else {
-      dispatch(registerUser(data));
-      toast.success("User registered successfully");
+      await dispatch(registerUser(data)).unwrap();
+
+      toast.success("Registration successful. Please login.");
+
+      reset();
       setTab("login");
     }
-    reset();
-  };
+  } catch (error) {
+    toast.error(
+      typeof error === "string"
+        ? error
+        : error?.message || "Something went wrong"
+    );
+  }
+};
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">

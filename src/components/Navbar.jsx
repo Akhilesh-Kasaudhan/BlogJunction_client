@@ -13,11 +13,13 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const {
-    isAuthenticated,
-    user,
-    loading: authLoading,
-  } = useSelector((state) => state.auth);
+ const { user, isAuthenticated, hasFetchedProfile } =
+  useSelector((state) => state.auth);
+  const { loading: authLoading } = useSelector(
+  (state) => state.auth
+);
+  const isLoggedIn =
+  hasFetchedProfile && isAuthenticated && !!user;
   const {
     userPosts,
     currentPage,
@@ -40,11 +42,13 @@ const Navbar = () => {
     }
   }, [user, reset]);
 
+  const userId = user?._id || user?.id;
+
   useEffect(() => {
     if (showProfileModal) {
-      dispatch(getPostsByUser({ userId: user.id, page: 1 }));
+      dispatch(getPostsByUser({ userId, page: 1 }));
     }
-  }, [dispatch, user?.id, showProfileModal]);
+  }, [dispatch, userId, showProfileModal]);
 
   const lastPostElementRef = useCallback(
     (node) => {
@@ -59,7 +63,7 @@ const Navbar = () => {
         ) {
           dispatch(
             getPostsByUser({
-              userId: user._id,
+              userId: userId,
               page: currentPage + 1,
             })
           );
@@ -68,14 +72,19 @@ const Navbar = () => {
 
       if (node) observer.current.observe(node);
     },
-    [postsLoading, currentPage, totalPages, user?._id, dispatch]
+    [postsLoading, currentPage, totalPages, userId, dispatch]
   );
+const handleLogout = async () => {
+  try {
+    await dispatch(logoutUser()).unwrap();
 
-  const handleLogout = async () => {
-    dispatch(logoutUser());
-    toast.success("User logged out");
-    navigate("/login");
-  };
+    toast.success("User logged out successfully");
+  } catch (error) {
+    toast.error("Logged out locally. Server session may still exist.");
+  } finally {
+    navigate("/login", { replace: true });
+  }
+};
 
   const handleProfileUpdate = (data) => {
     dispatch(updateUserProfile({ password: data.password }));
@@ -134,7 +143,7 @@ const Navbar = () => {
         <NavLink to="/create" className={navLinkClasses}>
           Create Blog
         </NavLink>
-        {isAuthenticated && user?.role == "admin" && (
+        {isLoggedIn && user?.role == "admin" && (
           <NavLink to="/dashboard" className={navLinkClasses}>
             Dashboard
           </NavLink>
@@ -143,9 +152,9 @@ const Navbar = () => {
 
       {!menuOpen && (
         <div className="navbar-end gap-2 items-center">
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <div className="flex items-center gap-4">
-              {isAuthenticated && (
+              {isLoggedIn && (
                 <button
                   className="btn btn-circle"
                   onClick={() => setShowProfileModal(true)}
@@ -185,7 +194,7 @@ const Navbar = () => {
           >
             Create Blog
           </NavLink>
-          {isAuthenticated && user?.role == "admin" && (
+          {isLoggedIn && user?.role == "admin" && (
             <NavLink
               to="/dashboard"
               className="btn btn-ghost w-full"
@@ -194,7 +203,7 @@ const Navbar = () => {
               Dashboard
             </NavLink>
           )}
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <>
               <button
                 className="btn btn-ghost w-full"
@@ -228,7 +237,7 @@ const Navbar = () => {
       )}
 
       {/* Profile modal */}
-      {isAuthenticated && showProfileModal && (
+      {isLoggedIn && showProfileModal && (
         <div className="fixed inset-0 bg-base-200/95 backdrop-blur-sm   z-50 flex items-center justify-center overflow-y-auto">
           <div className="bg-base-100 p-6 rounded-lg shadow-lg w-full max-w-4xl relative">
             <button

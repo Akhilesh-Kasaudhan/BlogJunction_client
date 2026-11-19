@@ -25,13 +25,10 @@ const ScrollToTop = () => {
 
 const App = () => {
   const dispatch = useDispatch();
-  const { hasFetchedProfile } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!hasFetchedProfile) {
-      dispatch(fetchUserProfile());
-    }
-  }, [hasFetchedProfile, dispatch]);
+    dispatch(fetchUserProfile());
+  }, [dispatch]);
 
   return (
     <div className=" bg-base-200 h-full ">
